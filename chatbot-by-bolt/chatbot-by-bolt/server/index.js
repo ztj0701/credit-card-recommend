@@ -13,8 +13,25 @@ const __dirname = dirname(__filename);
 const app = express();
 
 // Simplified CORS configuration since we're serving from same origin
-app.use(cors());
-app.use(express.json());
+const cors = require('cors');
+
+// 允许的域名（你可以根据需求添加多个域名）
+const allowedOrigins = ['https://taupe-speculoos-17b460.netlify.app'];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // 如果需要支持携带 Cookie 或其他凭证
+};
+
+app.use(cors(corsOptions)); // 使用带配置的 CORS 中间件
+app.use(express.json());    // 保留 express.json() 中间件
+
 
 // Serve static files from the dist directory
 app.use(express.static(join(__dirname, '../dist')));
