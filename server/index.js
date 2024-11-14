@@ -54,7 +54,7 @@ app.post('/chat', async (req, res) => {
     try {
       const completion = await openai.chat.completions.create({
         messages: [{ role: 'user', content: message }],
-        model: 'gpt-4',
+        model: 'gpt-4o',
       });
 
       if (!completion.choices || completion.choices.length === 0) {
