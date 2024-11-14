@@ -23,7 +23,7 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: false,  // 如果你需要在请求中使用凭证（如cookies）
+  credentials: true,  // 如果你需要在请求中使用凭证（如cookies）
 };
 
 app.use(cors(corsOptions));
