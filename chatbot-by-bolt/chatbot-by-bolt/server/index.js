@@ -26,11 +26,11 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // 如果需要支持携带 Cookie 或其他凭证
+  credentials: true,  // 如果你需要在请求中使用凭证（如cookies）
 };
 
-app.use(cors(corsOptions)); // 使用带配置的 CORS 中间件
-app.use(express.json());    // 保留 express.json() 中间件
+app.use(cors(corsOptions));
+app.use(express.json());
 
 
 // Serve static files from the dist directory
