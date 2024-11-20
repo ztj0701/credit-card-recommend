@@ -23,7 +23,7 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,  // 如果你需要在请求中使用凭证（如cookies）
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -37,7 +37,7 @@ const openai = new OpenAI({
 });
 
 // 内存缓存上下文结构
-const userConversations = {};
+let conversationContext = [];
 
 // System content, 仅在新对话时添加
 const systemContent = [
@@ -63,36 +63,27 @@ const systemContent = [
   }
 ];
 
-// 获取或创建用户的上下文
-function getUserContext(userId) {
-  if (!userConversations[userId]) {
-    // 如果用户没有上下文，创建新的对话上下文
-    userConversations[userId] = [...systemContent];
-  }
-  return userConversations[userId];
-}
+// 初始化上下文为系统内容
+conversationContext = [...systemContent];
 
 // Chat endpoint
 app.post('/chat', async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { message } = req.body;
 
-    if (!userId || !message) {
-      return res.status(400).json({ error: 'User ID and message are required' });
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
     }
 
     if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ error: 'OpenAI API key is not configured' });
     }
 
-    // 获取或创建用户的上下文
-    const userContext = getUserContext(userId);
-
     // 添加用户消息到上下文
-    userContext.push({ role: 'user', content: message });
+    conversationContext.push({ role: 'user', content: message });
 
     const completion = await openai.chat.completions.create({
-      messages: userContext,
+      messages: conversationContext,
       model: 'gpt-4o',
     });
 
@@ -102,7 +93,7 @@ app.post('/chat', async (req, res) => {
 
     // 获取回复并添加到上下文
     const reply = completion.choices[0].message.content;
-    userContext.push({ role: 'assistant', content: reply });
+    conversationContext.push({ role: 'assistant', content: reply });
 
     res.json({ reply });
   } catch (error) {
@@ -120,4 +111,3 @@ const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
