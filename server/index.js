@@ -103,6 +103,20 @@ app.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
+    // 将所有 system 内容拼接成一个长字符串
+    const systemContent = systemContent.map(item => item.content).join('\n\n');
+
+    if (conversationContext.length === systemContent.length) {
+      conversationContext[0] = { 
+        role: 'user', 
+        content: `${systemContent}\n\n${message}` 
+      };
+    } else {
+      // 非第一次对话时正常添加用户消息
+      conversationContext.push({ role: 'user', content: message });
+    }
+    // 新增的代码段结束
+    
     if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ error: 'OpenAI API key is not configured' });
     }
@@ -111,8 +125,8 @@ app.post('/chat', async (req, res) => {
     conversationContext.push({ role: 'user', content: message });
 
     const completion = await openai.chat.completions.create({
-      messages: conversationContext,
-      model: 'gpt-4o',
+      messages: conversationContext.filter(msg => msg.role !== 'system'),
+      model: 'o1-preview',
     });
 
     if (!completion.choices || completion.choices.length === 0) {
