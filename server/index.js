@@ -91,14 +91,15 @@ const systemContentArray = [
   }
 ];
 
+// 将系统内容转换为文本
+const systemContentText = systemContentArray.map(item => item.content).join('\n\n');
+
 // 初始化上下文为系统内容的用户消息形式
 conversationContext = [{ 
   role: 'user', 
   content: systemContentText 
 }];
 
-// 将系统内容转换为文本
-const systemContentText = systemContentArray.map(item => item.content).join('\n\n');
 
 // Chat endpoint
 app.post('/chat', async (req, res) => {
