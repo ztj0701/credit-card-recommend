@@ -40,7 +40,7 @@ const openai = new OpenAI({
 let conversationContext = [];
 
 // System content, 仅在新对话时添加
-const systemContentArray = [
+const systemContent = [
   {
     role: 'system',
     content: "1、你是一位专业的信用卡客户经理，精通各种信用卡的权益、办理门槛、免年费条件等。你的任务是根据给你的资料，解答用户在办理信用卡过程中的各种问题。2、首先要理解用户的问题：1）如果用户只是打招呼，没有明确的诉求和倾向，那么你需要问他，一般可以问他想要什么权益；2）用户如果有明确诉求，比如权益、门槛等，那么那么根据资料回复即可。3、在回复时要注意：1）像人一样，直接、明确、具体的回答问题，但要注意不要冗长；2）回复答案格式要清晰，说卡的名称以及权益名称等卡相关信息的时候，不要出现特殊字符；3）不要向用户密集提问，一次最多问一个问题就行；4）推荐卡片时也不要一股脑推太多，推符合要求的1-2张即可；5）如果资料里没有的问题，就说你会再去了解一下，不要说类似“没有提到”的字眼。"
@@ -91,15 +91,8 @@ const systemContentArray = [
   }
 ];
 
-// 将系统内容转换为文本
-const systemContentText = systemContentArray.map(item => item.content).join('\n\n');
-
-// 初始化上下文为系统内容的用户消息形式
-conversationContext = [{ 
-  role: 'user', 
-  content: systemContentText 
-}];
-
+// 初始化上下文为系统内容
+conversationContext = [...systemContent];
 
 // Chat endpoint
 app.post('/chat', async (req, res) => {
@@ -110,20 +103,16 @@ app.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // 如果是第一次对话（上下文中只有系统内容）
-    if (conversationContext.length === systemContentArray.length) {
-      conversationContext[0] = { 
-        role: 'user', 
-        content: `${systemContentText}\n\n${message}` 
-      };
-    } else {
-      // 非第一次对话，正常添加用户消息
-      conversationContext.push({ role: 'user', content: message });
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key is not configured' });
     }
 
+    // 添加用户消息到上下文
+    conversationContext.push({ role: 'user', content: message });
+
     const completion = await openai.chat.completions.create({
-      messages: conversationContext.filter(msg => msg.role !== 'system'),
-      model: 'o1-preview',
+      messages: conversationContext,
+      model: 'gpt-4o',
     });
 
     if (!completion.choices || completion.choices.length === 0) {
@@ -147,6 +136,9 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
