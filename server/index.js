@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import OpenAI from 'openai';
+import axios from 'axios';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -31,10 +31,6 @@ app.use(express.json());
 
 // Serve static files from the dist directory
 app.use(express.static(join(__dirname, '../dist')));
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // 内存缓存上下文结构
 let conversationContext = [];
@@ -103,24 +99,30 @@ app.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: 'OpenAI API key is not configured' });
+    if (!process.env.MOONSHOT_API_KEY) {
+      return res.status(500).json({ error: 'Moonshot API key is not configured' });
     }
 
     // 添加用户消息到上下文
     conversationContext.push({ role: 'user', content: message });
 
-    const completion = await openai.chat.completions.create({
+    // 调用 Moonshot API
+    const response = await axios.post('https://platform.moonshot.cn/api/chat', {
       messages: conversationContext,
-      model: 'gpt-4o',
+      model: 'moonshot-v1-32k',
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.MOONSHOT_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
     });
 
-    if (!completion.choices || completion.choices.length === 0) {
-      return res.status(500).json({ error: 'OpenAI 没有回复' });
+    if (!response.data.choices || response.data.choices.length === 0) {
+      return res.status(500).json({ error: 'Moonshot 没有回复' });
     }
 
     // 获取回复并添加到上下文
-    const reply = completion.choices[0].message.content;
+    const reply = response.data.choices[0].message.content;
     conversationContext.push({ role: 'assistant', content: reply });
 
     res.json({ reply });
