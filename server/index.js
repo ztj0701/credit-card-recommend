@@ -107,15 +107,17 @@ app.post('/chat', async (req, res) => {
     conversationContext.push({ role: 'user', content: message });
 
     // 调用 Moonshot API
-    const response = await axios.post('https://api.moonshot.cn/v1/chat/completions', {
-      messages: conversationContext,
-      model: 'moonshot-v1-32k',
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.MOONSHOT_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
+   const response = await axios.post('https://api.moonshot.cn/v1/chat/completions', {
+     messages: conversationContext,
+     model: 'moonshot-v1-32k',
+     temperature: 0.7,  // 添加温度参数，控制回答的创造性，0.7 是个比较均衡的值
+     stream: false,     // 添加 stream 参数，false 表示一次性返回完整回复
+   }, {
+     headers: {
+      'Authorization': `Bearer ${process.env.MOONSHOT_API_KEY}`,
+      'Content-Type': 'application/json'
+     }
+   });
 
     if (!response.data.choices || response.data.choices.length === 0) {
       return res.status(500).json({ error: 'Moonshot 没有回复' });
