@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 const app = express();
 
 // Simplified CORS configuration since we're serving from same origin
-const allowedOrigins = ['creditcardrecommend-5cbr64e33dd9-1258924904.ap-shanghai.app.tcloudbase.com'];
+const allowedOrigins = ['creditcardrecommend-5cbr64e33dd9-1258924904.ap-shanghai.app.tcloudbase.com','https://credit-card-recommend.vercel.app'];
 
 const corsOptions = {
   origin: (origin, callback) => {
