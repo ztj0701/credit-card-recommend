@@ -107,7 +107,7 @@ app.post('/chat', async (req, res) => {
     conversationContext.push({ role: 'user', content: message });
 
     // 调用 Moonshot API
-    const response = await axios.post('https://platform.moonshot.cn/api/chat', {
+    const response = await axios.post('https://api.moonshot.cn', {
       messages: conversationContext,
       model: 'moonshot-v1-32k',
     }, {
